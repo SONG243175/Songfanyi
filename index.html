@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="creative-medium" content="interactive-prototype">
+  <title>Song 翻译 — 专业翻译工具</title>
+  <link rel="stylesheet" href="https://miaoda.feishu.cn/fonts/css2?family=Source+Serif+4:wght@400;600;700&family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@400;500;600&display=swap">
+  <style>
+    :root {
+      --ink: #1a2b49;
+      --ink-soft: #3b4a6b;
+      --ink-mute: #6b7a99;
+      --paper: #fbfaf7;
+      --paper-2: #f3f1eb;
+      --line: #e5e2da;
+      --accent: #b8731e;
+      --accent-hover: #9a5f16;
+      --accent-soft: #f5e8d6;
+      --serif: "Source Serif 4", "Noto Serif SC", "Songti SC", Georgia, serif;
+      --sans: "Noto Sans SC", -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: var(--sans);
+      background: var(--paper);
+      color: var(--ink);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+    }
+
+    /* Top bar */
+    .topbar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 18px 40px;
+      background: rgba(251, 250, 247, 0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--line);
+      z-index: 100;
+    }
+
+    .logo {
+      font-family: var(--serif);
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      color: var(--ink);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo-mark {
+      width: 28px; height: 28px;
+      border: 1.5px solid var(--ink);
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--serif);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    /* Language switcher */
+    .lang-switch {
+      position: relative;
+    }
+
+    .lang-btn {
+      font-family: var(--sans);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--ink-soft);
+      background: none;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 7px 14px 7px 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+
+    .lang-btn:hover {
+      border-color: var(--ink-mute);
+      color: var(--ink);
+    }
+
+    .lang-btn svg {
+      width: 14px; height: 14px;
+      transition: transform 0.2s ease;
+    }
+
+    .lang-switch.open .lang-btn svg {
+      transform: rotate(180deg);
+    }
+
+    .lang-menu {
+      position: absolute;
+      top: calc(100% + 6px);
+      right: 0;
+      min-width: 160px;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: 0 8px 24px rgba(26, 43, 73, 0.08);
+      padding: 4px;
+      list-style: none;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-4px);
+      transition: all 0.18s ease;
+    }
+
+    .lang-switch.open .lang-menu {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+
+    .lang-menu li {
+      padding: 8px 12px;
+      font-size: 13px;
+      color: var(--ink-soft);
+      cursor: pointer;
+      border-radius: 5px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: background 0.15s ease;
+    }
+
+    .lang-menu li:hover {
+      background: var(--paper-2);
+      color: var(--ink);
+    }
+
+    .lang-menu li.active {
+      color: var(--accent);
+      font-weight: 500;
+    }
+
+    .lang-menu li.active::after {
+      content: "";
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+    }
+
+    /* Main content */
+    .main {
+      padding-top: 80px;
+      max-width: 920px;
+      margin: 0 auto;
+      padding-left: 40px;
+      padding-right: 40px;
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      justify-content: center;
+      gap: 4px;
+      margin: 60px 0 48px;
+      padding: 4px;
+      background: var(--paper-2);
+      border-radius: 10px;
+      width: fit-content;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .tab {
+      font-family: var(--sans);
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--ink-mute);
+      background: none;
+      border: none;
+      padding: 10px 28px;
+      border-radius: 7px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .tab:hover {
+      color: var(--ink-soft);
+    }
+
+    .tab.active {
+      background: #fff;
+      color: var(--ink);
+      box-shadow: 0 1px 3px rgba(26, 43, 73, 0.06);
+    }
+
+    /* Panel */
+    .panel {
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .panel.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Hero / Intro */
+    .hero {
+      text-align: center;
+      padding: 20px 0 80px;
+    }
+
+    .hero-eyebrow {
+      font-family: var(--serif);
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 20px;
+    }
+
+    .hero-title {
+      font-family: var(--serif);
+      font-size: clamp(36px, 6vw, 60px);
+      font-weight: 700;
+      line-height: 1.2;
+      color: var(--ink);
+      margin-bottom: 8px;
+    }
+
+    .hero-subtitle {
+      font-family: var(--serif);
+      font-size: clamp(18px, 2.5vw, 24px);
+      font-weight: 400;
+      color: var(--ink-soft);
+      font-style: italic;
+      margin-bottom: 48px;
+    }
+
+    .hero-bilingual {
+      max-width: 640px;
+      margin: 0 auto 56px;
+      padding: 32px 36px;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      position: relative;
+    }
+
+    .hero-bilingual::before {
+      content: "A / B";
+      position: absolute;
+      top: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--paper);
+      padding: 0 12px;
+      font-family: var(--serif);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      color: var(--ink-mute);
+    }
+
+    .bilingual-line {
+      font-family: var(--serif);
+      font-size: 20px;
+      line-height: 1.7;
+      color: var(--ink);
+    }
+
+    .bilingual-line + .bilingual-line {
+      margin-top: 12px;
+      color: var(--ink-mute);
+      font-style: italic;
+    }
+
+    .features {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      margin-top: 56px;
+      text-align: left;
+    }
+
+    .feature-card {
+      padding: 24px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #fff;
+      transition: all 0.25s ease;
+    }
+
+    .feature-card:hover {
+      border-color: var(--ink-mute);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(26, 43, 73, 0.06);
+    }
+
+    .feature-icon {
+      width: 36px; height: 36px;
+      border: 1.5px solid var(--accent);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+      color: var(--accent);
+    }
+
+    .feature-icon svg {
+      width: 18px; height: 18px;
+    }
+
+    .feature-title {
+      font-family: var(--serif);
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--ink);
+      margin-bottom: 8px;
+    }
+
+    .feature-desc {
+      font-size: 13px;
+      line-height: 1.6;
+      color: var(--ink-mute);
+    }
+
+    /* Download panel */
+    .download-section {
+      text-align: center;
+      padding: 20px 0 80px;
+    }
+
+    .download-eyebrow {
+      font-family: var(--serif);
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 20px;
+    }
+
+    .download-title {
+      font-family: var(--serif);
+      font-size: clamp(32px, 5vw, 48px);
+      font-weight: 700;
+      color: var(--ink);
+      margin-bottom: 12px;
+    }
+
+    .download-subtitle {
+      font-size: 15px;
+      color: var(--ink-mute);
+      margin-bottom: 48px;
+    }
+
+    .version-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      border-radius: 100px;
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 32px;
+      font-family: var(--sans);
+    }
+
+    .version-badge::before {
+      content: "";
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+    }
+
+    .download-btn-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .download-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 16px 44px;
+      background: var(--accent);
+      color: #fff;
+      font-family: var(--sans);
+      font-size: 15px;
+      font-weight: 500;
+      text-decoration: none;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 14px rgba(184, 115, 30, 0.3);
+    }
+
+    .download-btn:hover {
+      background: var(--accent-hover);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(184, 115, 30, 0.35);
+    }
+
+    .download-btn svg {
+      width: 18px; height: 18px;
+    }
+
+    .password-note {
+      font-size: 13px;
+      color: var(--ink-mute);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .password-note strong {
+      color: var(--ink-soft);
+      font-family: "SF Mono", "Consolas", monospace;
+      font-weight: 600;
+      background: var(--paper-2);
+      padding: 2px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.5px;
+    }
+
+    .download-info {
+      max-width: 480px;
+      margin: 56px auto 0;
+      padding-top: 32px;
+      border-top: 1px solid var(--line);
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      text-align: center;
+    }
+
+    .info-item-label {
+      font-size: 12px;
+      color: var(--ink-mute);
+      margin-bottom: 4px;
+    }
+
+    .info-item-value {
+      font-family: var(--serif);
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--ink);
+    }
+
+    /* Footer */
+    .footer {
+      text-align: center;
+      padding: 40px;
+      border-top: 1px solid var(--line);
+      margin-top: 40px;
+      font-size: 12px;
+      color: var(--ink-mute);
+    }
+
+    /* Responsive */
+    @media (max-width: 680px) {
+      .topbar { padding: 14px 20px; }
+      .main { padding-left: 20px; padding-right: 20px; }
+      .features { grid-template-columns: 1fr; }
+      .download-info { grid-template-columns: repeat(3, 1fr); gap: 12px; }
+      .info-item-value { font-size: 15px; }
+      .hero-bilingual { padding: 24px 20px; }
+      .bilingual-line { font-size: 17px; }
+      .tabs { margin: 40px 0 32px; }
+      .tab { padding: 9px 20px; font-size: 13px; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Top bar -->
+  <header class="topbar">
+    <div class="logo">
+      <span class="logo-mark">S</span>
+      <span data-i18n="brand">Song 翻译</span>
+    </div>
+    <div class="lang-switch" id="langSwitch">
+      <button class="lang-btn" id="langBtn" aria-haspopup="listbox" aria-expanded="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="2" y1="12" x2="22" y2="12"></line>
+          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+        </svg>
+        <span id="currentLangLabel">简体中文</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left: 2px;">
+          <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+      </button>
+      <ul class="lang-menu" id="langMenu" role="listbox">
+        <li data-lang="zh-CN" class="active">简体中文</li>
+        <li data-lang="zh-TW">繁體中文</li>
+        <li data-lang="en">English</li>
+      </ul>
+    </div>
+  </header>
+
+  <!-- Main -->
+  <main class="main">
+    <!-- Tabs -->
+    <nav class="tabs" role="tablist">
+      <button class="tab active" data-tab="intro" data-i18n="tabIntro">介绍</button>
+      <button class="tab" data-tab="download" data-i18n="tabDownload">下载</button>
+    </nav>
+
+    <!-- Intro Panel -->
+    <section class="panel active" id="panel-intro" role="tabpanel">
+      <div class="hero">
+        <div class="hero-eyebrow" data-i18n="introEyebrow">专业翻译工具</div>
+        <h1 class="hero-title" data-i18n="introTitle">精准，流畅，专业</h1>
+        <p class="hero-subtitle" data-i18n="introSubtitle">让每一次翻译都值得信赖</p>
+
+        <div class="hero-bilingual">
+          <p class="bilingual-line" data-i18n="bilingualA">语言是通往世界的桥梁，而翻译是桥上的灯。</p>
+          <p class="bilingual-line" data-i18n="bilingualB">Language is the bridge to the world, and translation is the light upon it.</p>
+        </div>
+
+        <div class="features">
+          <div class="feature-card">
+            <div class="feature-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 20h9"></path>
+                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+              </svg>
+            </div>
+            <h3 class="feature-title" data-i18n="feature1Title">精准翻译</h3>
+            <p class="feature-desc" data-i18n="feature1Desc">基于专业语料训练，术语准确，译文通顺自然，符合目标语言表达习惯。</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+              </svg>
+            </div>
+            <h3 class="feature-title" data-i18n="feature2Title">极速响应</h3>
+            <p class="feature-desc" data-i18n="feature2Desc">毫秒级翻译速度，支持大段文本即时转换，高效处理各种翻译场景。</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              </svg>
+            </div>
+            <h3 class="feature-title" data-i18n="feature3Title">隐私安全</h3>
+            <p class="feature-desc" data-i18n="feature3Desc">本地处理优先，数据加密传输，保护您的翻译内容不外泄。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Download Panel -->
+    <section class="panel" id="panel-download" role="tabpanel">
+      <div class="download-section">
+        <div class="download-eyebrow" data-i18n="dlEyebrow">立即获取</div>
+        <h2 class="download-title" data-i18n="dlTitle">下载 Song 翻译</h2>
+        <p class="download-subtitle" data-i18n="dlSubtitle">适用于 Windows 平台，免费安装使用</p>
+
+        <div class="version-badge">
+          <span data-i18n="dlVersionLabel">当前版本</span>
+          <span>1.0.0</span>
+        </div>
+
+        <div class="download-btn-wrap">
+          <a class="download-btn" href="https://wwbsy.lanzoue.com/iofU042xmcnc" target="_blank" rel="noopener noreferrer">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            <span data-i18n="dlButton">立即下载</span>
+          </a>
+          <div class="password-note">
+            <span data-i18n="dlPasswordLabel">密码：</span>
+            <strong>ez00</strong>
+          </div>
+        </div>
+
+        <div class="download-info">
+          <div class="info-item">
+            <div class="info-item-label" data-i18n="dlInfoSizeLabel">文件大小</div>
+            <div class="info-item-value">28.5 MB</div>
+          </div>
+          <div class="info-item">
+            <div class="info-item-label" data-i18n="dlInfoPlatformLabel">支持系统</div>
+            <div class="info-item-value">Windows</div>
+          </div>
+          <div class="info-item">
+            <div class="info-item-label" data-i18n="dlInfoUpdateLabel">更新日期</div>
+            <div class="info-item-value">2026.08</div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <span data-i18n="footer">© 2026 Song 翻译. 保留所有权利.</span>
+  </footer>
+
+  <script>
+    // ===== i18n data =====
+    const i18nData = {
+      "zh-CN": {
+        brand: "Song 翻译",
+        tabIntro: "介绍",
+        tabDownload: "下载",
+        introEyebrow: "专业翻译工具",
+        introTitle: "精准，流畅，专业",
+        introSubtitle: "让每一次翻译都值得信赖",
+        bilingualA: "语言是通往世界的桥梁，而翻译是桥上的灯。",
+        bilingualB: "Language is the bridge to the world, and translation is the light upon it.",
+        feature1Title: "精准翻译",
+        feature1Desc: "基于专业语料训练，术语准确，译文通顺自然，符合目标语言表达习惯。",
+        feature2Title: "极速响应",
+        feature2Desc: "毫秒级翻译速度，支持大段文本即时转换，高效处理各种翻译场景。",
+        feature3Title: "隐私安全",
+        feature3Desc: "本地处理优先，数据加密传输，保护您的翻译内容不外泄。",
+        dlEyebrow: "立即获取",
+        dlTitle: "下载 Song 翻译",
+        dlSubtitle: "适用于 Windows 平台，免费安装使用",
+        dlVersionLabel: "当前版本",
+        dlButton: "立即下载",
+        dlPasswordLabel: "密码：",
+        dlInfoSizeLabel: "文件大小",
+        dlInfoPlatformLabel: "支持系统",
+        dlInfoUpdateLabel: "更新日期",
+        footer: "© 2026 Song 翻译. 保留所有权利。",
+        langLabel: "简体中文"
+      },
+      "zh-TW": {
+        brand: "Song 翻譯",
+        tabIntro: "介紹",
+        tabDownload: "下載",
+        introEyebrow: "專業翻譯工具",
+        introTitle: "精準，流暢，專業",
+        introSubtitle: "讓每一次翻譯都值得信賴",
+        bilingualA: "語言是通往世界的橋樑，而翻譯是橋上的燈。",
+        bilingualB: "Language is the bridge to the world, and translation is the light upon it.",
+        feature1Title: "精準翻譯",
+        feature1Desc: "基於專業語料訓練，術語準確，譯文通順自然，符合目標語言表達習慣。",
+        feature2Title: "極速響應",
+        feature2Desc: "毫秒級翻譯速度，支援大段文字即時轉換，高效處理各種翻譯場景。",
+        feature3Title: "隱私安全",
+        feature3Desc: "本機處理優先，數據加密傳輸，保護您的翻譯內容不外洩。",
+        dlEyebrow: "立即取得",
+        dlTitle: "下載 Song 翻譯",
+        dlSubtitle: "適用於 Windows 平台，免費安裝使用",
+        dlVersionLabel: "目前版本",
+        dlButton: "立即下載",
+        dlPasswordLabel: "密碼：",
+        dlInfoSizeLabel: "檔案大小",
+        dlInfoPlatformLabel: "支援系統",
+        dlInfoUpdateLabel: "更新日期",
+        footer: "© 2026 Song 翻譯. 保留所有權利。",
+        langLabel: "繁體中文"
+      },
+      "en": {
+        brand: "Song Translate",
+        tabIntro: "Introduction",
+        tabDownload: "Download",
+        introEyebrow: "Professional Translation Tool",
+        introTitle: "Precise. Fluent. Professional.",
+        introSubtitle: "Make every translation you can trust",
+        bilingualA: "Language is the bridge to the world, and translation is the light upon it.",
+        bilingualB: "语言是通往世界的桥梁，而翻译是桥上的灯。",
+        feature1Title: "Precise Translation",
+        feature1Desc: "Trained on professional corpora with accurate terminology. Translations read naturally and follow target-language conventions.",
+        feature2Title: "Lightning Fast",
+        feature2Desc: "Millisecond-level translation speed. Instantly converts large blocks of text, handling every translation scenario efficiently.",
+        feature3Title: "Privacy & Security",
+        feature3Desc: "Local processing first, with encrypted data transmission. Your translation content stays private and secure.",
+        dlEyebrow: "Get it now",
+        dlTitle: "Download Song Translate",
+        dlSubtitle: "Available for Windows — free to install and use",
+        dlVersionLabel: "Current Version",
+        dlButton: "Download Now",
+        dlPasswordLabel: "Password:",
+        dlInfoSizeLabel: "File Size",
+        dlInfoPlatformLabel: "Platform",
+        dlInfoUpdateLabel: "Updated",
+        footer: "© 2026 Song Translate. All rights reserved.",
+        langLabel: "English"
+      }
+    };
+
+    // ===== Language switcher =====
+    const langSwitch = document.getElementById("langSwitch");
+    const langBtn = document.getElementById("langBtn");
+    const langMenu = document.getElementById("langMenu");
+    const currentLangLabel = document.getElementById("currentLangLabel");
+
+    function setLanguage(lang) {
+      const data = i18nData[lang];
+      if (!data) return;
+
+      document.documentElement.lang = lang;
+      document.title = data.brand + " — " + (lang === "en" ? "Professional Translation Tool" : (lang === "zh-TW" ? "專業翻譯工具" : "专业翻译工具"));
+      currentLangLabel.textContent = data.langLabel;
+
+      document.querySelectorAll("[data-i18n]").forEach(el => {
+        const key = el.getAttribute("data-i18n");
+        if (data[key] !== undefined) {
+          el.textContent = data[key];
+        }
+      });
+
+      // Update active state in menu
+      document.querySelectorAll(".lang-menu li").forEach(li => {
+        li.classList.toggle("active", li.dataset.lang === lang);
+      });
+
+      // Save preference
+      try { localStorage.setItem("song-lang", lang); } catch (e) {}
+    }
+
+    langBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      langSwitch.classList.toggle("open");
+      langBtn.setAttribute("aria-expanded", langSwitch.classList.contains("open"));
+    });
+
+    langMenu.addEventListener("click", (e) => {
+      const li = e.target.closest("li[data-lang]");
+      if (!li) return;
+      setLanguage(li.dataset.lang);
+      langSwitch.classList.remove("open");
+      langBtn.setAttribute("aria-expanded", "false");
+    });
+
+    document.addEventListener("click", () => {
+      langSwitch.classList.remove("open");
+      langBtn.setAttribute("aria-expanded", "false");
+    });
+
+    // ===== Tabs =====
+    const tabs = document.querySelectorAll(".tab");
+    const panels = document.querySelectorAll(".panel");
+
+    tabs.forEach(tab => {
+      tab.addEventListener("click", () => {
+        const target = tab.dataset.tab;
+        tabs.forEach(t => t.classList.toggle("active", t === tab));
+        panels.forEach(p => {
+          p.classList.toggle("active", p.id === "panel-" + target);
+        });
+      });
+    });
+
+    // ===== Init: load saved language =====
+    (function init() {
+      let saved = null;
+      try { saved = localStorage.getItem("song-lang"); } catch (e) {}
+      if (saved && i18nData[saved]) {
+        setLanguage(saved);
+      }
+    })();
+  </script>
+</body>
+</html>
